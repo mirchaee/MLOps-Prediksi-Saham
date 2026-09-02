@@ -36,8 +36,8 @@ Proyek ini merupakan implementasi pipeline Machine Learning Operations (MLOps) *
 ├── LICENSE              # Lisensi proyek (MIT)
 ├── README.md            # Dokumentasi utama proyek
 └── requirements.txt     # Daftar dependensi library Python
-
-🚀 Panduan Membuka Lingkungan Kerja (GitHub Codespaces)
+```
+## Panduan Membuka Lingkungan Kerja (GitHub Codespaces)
 Proyek ini telah dikonfigurasi menggunakan DevContainer agar dapat langsung dijalankan tanpa perlu melakukan instalasi manual di komputer lokal.
 
 Klik tombol Code di bagian atas repositori ini.
@@ -46,9 +46,12 @@ Pilih tab Codespaces lalu klik Create codespace on main.
 
 Tunggu proses build container selesai. Lingkungan kerja akan otomatis menginstal Python 3.12 beserta seluruh dependensi library yang tercantum pada requirements.txt.
 
-🌿 Strategi Percabangan (GitHub Flow)
+## Strategi Percabangan (GitHub Flow)
 Pengembangan repositori ini menggunakan aturan GitHub Flow:
 
 main: Percabangan utama yang berisi kode terverifikasi dan siap produksi.
 
 feat/*: Percabangan fitur/eksperimen (contoh: feat/initial-eda). Setiap perubahan dimasukkan ke main melalui Pull Request (PR) setelah lolos pengujian.
+
+## Lisensi
+Hak Cipta © 2026 Roniarta Sibarani. Dilisensikan di bawah MIT License.
