@@ -1,0 +1,11 @@
+pandas
+numpy
+yfinance
+ta
+scikit-learn
+xgboost
+mlflow
+dvc
+pytest
+fastapi
+uvicorn
