@@ -57,8 +57,8 @@ MLOps-Prediksi-Saham/
 ├── src/                    # Kode sumber modular utama
 │   ├── api/                # Backend API (FastAPI) untuk serving prediksi
 │   ├── data/
-│   │   ├── ingest_data.py  # Extract: tarik data OHLCV dari Yahoo Finance (yfinance)
-│   │   └── clean_data.py   # Transform: null-check, duplicate-check, sort chronological
+│   │   ├── ingest_data.py  # Extract: tarik data OHLCV dari Yahoo Finance (yfinance, dengan retry)
+│   │   └── preprocess.py   # Transform: null-check, duplicate-check, sort chronological
 │   ├── features/
 │   │   └── build_features.py # Transform: RSI-14, MACD, Bollinger Bands, target biner
 │   ├── models/              # Skrip pelatihan, evaluasi, dan registry model
@@ -120,10 +120,20 @@ Atau buka file `notebooks/1.0-initial-eda.ipynb` menggunakan Jupyter Notebook di
 Pipeline data dijalankan otomatis setiap hari kerja pukul 17:00 WIB lewat GitHub Actions, tetapi bisa juga dijalankan manual untuk pengembangan/debugging:
 
 ```bash
-python src/data/ingest_data.py       # Extract: tarik data OHLCV terbaru dari Yahoo Finance
-python src/data/clean_data.py        # Transform: bersihkan data (null, duplikat, urutan tanggal)
+python src/data/ingest_data.py       # Extract: tarik data OHLCV terbaru dari Yahoo Finance (dengan retry saat error koneksi)
+python src/data/preprocess.py        # Transform: bersihkan data mentah (null, duplikat, urutan tanggal)
 python src/features/build_features.py # Transform: hitung RSI/MACD/Bollinger Bands + label target
 ```
+
+**Detail skrip ingestion (`ingest_data.py`):**
+- Mengambil sliding window 250 hari perdagangan terakhir dari Yahoo Finance API untuk ticker `BBCA.JK`.
+- Dilengkapi mekanisme *retry* (maksimal 3 percobaan, jeda 5 detik) untuk menangani error koneksi/timeout.
+- Bersifat non-destruktif: setiap eksekusi menghasilkan snapshot baru bertimestamp (`data/raw/BBCA_raw_YYYYMMDD.csv`) tanpa menimpa data lama, serta memperbarui file `data/raw/BBCA_raw.csv` sebagai referensi data terbaru.
+
+**Detail skrip preprocessing (`preprocess.py`):**
+- Membaca data mentah terbaru dari `data/raw/BBCA_raw.csv`.
+- Melakukan null-check pada kolom OHLCV, pengecekan baris duplikat berdasarkan tanggal, dan pengurutan data secara kronologis.
+- Menyimpan hasil ke `data/processed/BBCA_processed.csv`, siap digunakan pada tahap ekstraksi fitur (`build_features.py`).
 
 Setelah dataset final terbentuk di `data/final/BBCA_features.csv`, catat versinya dengan DVC:
 
