@@ -13,7 +13,7 @@ import pandas as pd
 import yfinance as yf
 
 TICKER = "BBCA.JK"
-WINDOW_DAYS = 250  # sliding window ~250 hari perdagangan terakhir
+WINDOW_DAYS = 250  
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 5
 
@@ -39,7 +39,7 @@ def download_with_retry(
             if df.empty:
                 raise ValueError(f"Data kosong untuk ticker {ticker}")
             return df
-        except Exception as err:  # noqa: BLE001 - sengaja luas
+        except Exception as err:  # noqa: BLE001
             last_error = err
             print(f"[WARNING] Gagal mengambil data: {err}")
             if attempt < max_retries:
@@ -63,8 +63,6 @@ def fetch_stock_data(
     tahap pemrosesan berikutnya.
     """
     end_date = datetime.now()
-    # dilebihkan ke hari kalender karena window_days dihitung
-    # dalam hari perdagangan, bukan hari kalender
     start_date = end_date - timedelta(days=int(window_days * 1.6))
 
     print(
@@ -83,13 +81,9 @@ def fetch_stock_data(
 
     df.reset_index(inplace=True)
 
-    # Ambil window_days baris paling akhir saja
     df = df.tail(window_days).reset_index(drop=True)
-
     raw_dir = os.path.join("data", "raw")
     os.makedirs(raw_dir, exist_ok=True)
-
-    # Nama file bertimestamp -> non-destruktif, tidak menimpa data lama
     date_tag = end_date.strftime("%Y%m%d")
     snapshot_path = os.path.join(raw_dir, f"BBCA_raw_{date_tag}.csv")
     latest_path = os.path.join(raw_dir, "BBCA_raw.csv")
