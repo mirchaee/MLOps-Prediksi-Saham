@@ -149,6 +149,101 @@ git push
 Status ingestion harian dapat dipantau pada tab **Actions** repositori ini, workflow `Daily Stock Data Ingestion`. Workflow dapat dipicu manual kapan saja lewat tombol **Run workflow** tanpa menunggu jadwal CRON.
 
 ---
+## Manajemen Data Versioning Menggunakan DVC
+
+### 1. Tujuan Implementasi
+
+Data Version Control (DVC) digunakan untuk mengelola perubahan dataset saham BBCA.JK tanpa menyimpan seluruh versi file CSV secara langsung di Git. DVC menyimpan konten dataset melalui cache dan mencatat metadata hash pada file `.dvc`, sedangkan Git digunakan untuk menyimpan histori perubahan metadata tersebut.
+
+Mekanisme ini mendukung *data lineage*, audit perubahan dataset, dan *reproducibility* dalam pengembangan pipeline continual learning.
+
+### 2. Alur Pembaruan Dataset
+
+Proses pembaruan dataset dilakukan melalui tahapan:
+
+1. **Data Ingestion:** Mengambil data saham BBCA.JK terbaru dari Yahoo Finance melalui `src/data/ingest_data.py`.
+2. **Preprocessing:** Melakukan null-check, duplicate-check, dan chronological sorting menggunakan `src/data/preprocess.py`.
+3. **Feature Engineering:** Menghitung RSI-14, MACD, Bollinger Bands, serta target klasifikasi melalui `src/features/build_features.py`.
+4. **Data Versioning:** Mencatat perubahan dataset raw dan final menggunakan DVC.
+5. **Git Version Control:** Menyimpan metadata `.dvc` ke Git untuk menghubungkan versi dataset dengan histori pengembangan.
+
+Untuk menjalankan pembaruan dataset secara lokal melalui PowerShell:
+
+```powershell
+.\.venv\Scripts\python.exe src/data/ingest_data.py
+.\.venv\Scripts\python.exe src/data/preprocess.py
+.\.venv\Scripts\python.exe src/features/build_features.py
+
+.\.venv\Scripts\dvc.exe add data/raw/BBCA_raw.csv
+.\.venv\Scripts\dvc.exe add data/final/BBCA_features.csv
+
+git add data/raw/BBCA_raw.csv.dvc data/final/BBCA_features.csv.dvc
+git commit -m "feat(dvc): update BBCA dataset"
+```
+
+Setiap pembaruan hanya dicatat sebagai versi baru setelah perubahan dataset diverifikasi.
+
+### 3. Hasil Implementasi Versioning
+
+Implementasi LK-05 berhasil menghasilkan dua versi dataset:
+
+| Parameter | Versi 1 (V1) | Versi 2 (V2) |
+|---|---|---|
+| Tanggal terakhir | 25 September 2026 | 9 Oktober 2026 |
+| Jumlah raw data | 250 baris | 250 baris |
+| Jumlah final data | 230 baris | 230 baris |
+| Hash raw (MD5) | `cc774d62...` | `be4e1b69...` |
+| Hash final (MD5) | `44b016fe...` | `b2b54b88...` |
+| Git Commit | `fb3a664` | `2e2ed64` |
+| Git Tag | `lk05-data-v1-complete` | `lk05-data-v2` |
+
+Pembaruan dataset menghasilkan 10 tanggal perdagangan baru dan mengeluarkan 10 tanggal terlama. Jumlah observasi tetap 250 karena pipeline menerapkan mekanisme sliding window.
+
+### 4. Audit Perubahan Dataset
+
+Perbandingan kedua versi dilakukan menggunakan:
+
+```powershell
+.\.venv\Scripts\dvc.exe diff --show-hash lk05-data-v1-complete lk05-data-v2
+```
+
+Hasil audit:
+
+```text
+Modified:
+    44b016fe..b2b54b88  data\final\BBCA_features.csv
+    cc774d62..be4e1b69  data\raw\BBCA_raw.csv
+
+files summary: 2 modified
+```
+
+Hasil tersebut menunjukkan bahwa DVC berhasil mengidentifikasi perubahan pada dataset raw dan final, serta mencatat perbedaan hash antara kedua versi.
+
+### 5. Reproducibility
+
+Penerapan DVC memungkinkan setiap versi dataset diidentifikasi melalui kombinasi Git commit, metadata `.dvc`, dan konten dataset yang tersimpan di cache atau remote storage.
+
+Versi V1 dan V2 dapat ditelusuri melalui Git tag untuk mendukung proses audit dan pengujian ulang model pada tahap pengembangan berikutnya.
+
+Git menyimpan metadata, bukan seluruh konten dataset. Oleh karena itu, pemulihan dataset membutuhkan DVC cache atau remote storage yang masih menyimpan versi terkait.
+
+Konfigurasi DVC remote merupakan mekanisme tambahan untuk melakukan backup dan sinkronisasi dataset. Penggunaan remote berbasis direktori lokal dapat mendukung pengujian mekanisme push dan pull, sedangkan penyimpanan cloud diperlukan untuk akses lintas perangkat tanpa bergantung pada laptop pengembangan.
+
+### Pengujian DVC Remote Storage
+
+Pada LK-05, DVC dikonfigurasi menggunakan *local filesystem remote* yang disimpan di luar direktori repositori Git.
+
+Pengujian dilakukan melalui perintah berikut:
+
+```powershell
+.\.venv\Scripts\dvc.exe push --all-tags
+.\.venv\Scripts\dvc.exe status --cloud --all-tags
+.\.venv\Scripts\dvc.exe pull
+```
+
+Hasil pengujian menunjukkan bahwa empat objek data berhasil dikirim ke remote, status cache dan remote telah tersinkronisasi, serta perintah `dvc pull` berhasil dijalankan.
+
+Konfigurasi remote disimpan secara lokal melalui `.dvc/config.local` sehingga tidak dibagikan melalui Git. Implementasi ini memvalidasi mekanisme sinkronisasi dataset, sedangkan penggunaan cloud storage dan pengujian pemulihan lintas perangkat merupakan pengembangan lanjutan.
 
 ## Alur Pengembangan (GitHub Flow)
 
