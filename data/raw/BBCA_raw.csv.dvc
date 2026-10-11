@@ -1,0 +1,5 @@
+outs:
+- md5: be4e1b69c1e4e81cb557902192762217
+  size: 21484
+  hash: md5
+  path: BBCA_raw.csv
