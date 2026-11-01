@@ -1,0 +1,6 @@
+outs:
+- md5: d7f1675c06739f8ed4c887c38be4c318
+  size: 990
+  isexec: true
+  hash: md5
+  path: production_model.yaml

@@ -219,3 +219,9 @@ __marimo__/
 data/raw/*.csv
 data/processed/*.csv
 !data/*/.gitkeep
+/.dvc-storage/
+
+# MLflow local tracking data
+mlartifacts/
+mlflow.db
+mlflow.db.*

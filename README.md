@@ -254,6 +254,32 @@ Pengembangan repositori ini menerapkan aturan standar **GitHub Flow**:
 3. **Pull Request (PR):** Mengunggah *branch* ke GitHub dan membuat PR ke branch `main`.
 4. **Merge:** Melakukan *merge* ke branch `main` setelah seluruh pengujian terverifikasi.
 
+## Model Aktif untuk Inferensi
+
+Berdasarkan hasil evaluasi dan proses registrasi menggunakan MLflow Model Registry, model yang saat ini digunakan untuk inferensi adalah **Random Forest Version 1** dari registered model `bbca-direction-classifier`.
+
+Model Version 1 dipilih karena menghasilkan performa evaluasi validation yang lebih baik dibandingkan Version 2.
+
+| Metrik | Version 1 | Version 2 |
+|---|---:|---:|
+| Accuracy | 0.6364 | 0.6061 |
+| Precision | 1.0000 | 1.0000 |
+| Recall | 0.2000 | 0.1333 |
+| F1-score | 0.3333 | 0.2353 |
+
+Version 1 memiliki nilai accuracy, recall, dan F1-score yang lebih tinggi, sementara precision kedua versi sama. Oleh karena itu, Version 1 ditetapkan sebagai model Production dan menjadi versi aktif yang digunakan untuk proses inferensi.
+
+Informasi model aktif:
+
+- **Registered Model:** `bbca-direction-classifier`
+- **Active Version:** `1`
+- **Stage:** `Production`
+- **Status:** `READY`
+- **Model URI:** `models:/bbca-direction-classifier/1`
+- **Dataset:** `lk05-data-v2`
+
+Model dapat dimuat kembali melalui MLflow menggunakan Model URI tersebut. Pengujian inferensi telah berhasil dilakukan menggunakan lima sampel input dengan sepuluh fitur.
+
 ---
 
 ## Lisensi
