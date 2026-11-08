@@ -1,0 +1,5 @@
+['remote "dagshub"']
+    url = https://dagshub.com/mirchaee/MLOps-Prediksi-Saham.dvc
+['remote "dagshub_s3"']
+    url = s3://dvc
+    endpointurl = https://dagshub.com/mirchaee/MLOps-Prediksi-Saham.s3
