@@ -282,6 +282,133 @@ Model dapat dimuat kembali melalui MLflow menggunakan Model URI tersebut. Penguj
 
 ---
 
+---
+
+## LK-08: Otomatisasi End-to-End MLOps Pipeline
+
+### Tujuan Implementasi
+
+LK-08 mengimplementasikan prinsip Code as a Trigger melalui GitHub Actions. Perubahan kode yang dikirim ke repositori secara otomatis memicu pengujian, pelatihan ulang model, evaluasi performa, dan pemeriksaan kelayakan registrasi model.
+
+Implementasi ini melanjutkan pengelolaan dataset DVC pada LK-05, pelatihan dan pelacakan eksperimen MLflow pada LK-06, serta Model Registry pada LK-07.
+
+### Infrastruktur dan Konfigurasi
+
+| Komponen | Implementasi |
+|---|---|
+| Lingkungan pengembangan | VS Code lokal dengan Docker Dev Container |
+| Python | 3.12 |
+| CI/CD | GitHub Actions |
+| Automated Testing | pytest |
+| Data Versioning | DVC |
+| DVC Remote | DagsHub S3-compatible storage |
+| Machine Learning | RandomForestClassifier |
+| Experiment Tracking | MLflow melalui DagsHub |
+| Model Registry | MLflow Model Registry |
+| Validation Gate | F1-score >= 0.58 |
+
+Dataset baseline yang digunakan berasal dari LK-05 V2, dengan 230 observasi, 10 fitur numerik, dan hash MD5 `b2b54b8853b623e24328369d34d31128`.
+
+### Arsitektur Pipeline Otomatis
+
+Pipeline didefinisikan dalam `.github/workflows/mlops-automation.yaml` dan terdiri atas tiga job utama:
+
+1. **Automated Testing:** Menjalankan pytest untuk memeriksa integritas kode dan aturan validasi.
+2. **Automated Training and Evaluation:** Mengunduh dataset dari DVC remote, melatih Random Forest, mencatat eksperimen ke MLflow, dan mengevaluasi F1-score.
+3. **Automated Model Registry:** Memeriksa kelayakan model dan mendaftarkannya ke Staging hanya jika memenuhi threshold.
+
+Workflow dipicu melalui push pada branch `main` dan `feat/lk08-automation`, serta melalui pull request menuju `main`. Pada pull request, hanya job Testing yang dijalankan untuk menghindari penggunaan kredensial pada perubahan yang belum digabungkan.
+
+### Integrasi dan Perubahan File
+
+| File | Jenis perubahan | Fungsi |
+|---|---|---|
+| `.dvc/config` | Modifikasi LK-05 | Menambahkan remote penyimpanan DagsHub |
+| `data/final/BBCA_features.csv.dvc` | Modifikasi metadata LK-05 | Menyelaraskan pointer DVC dengan baseline dataset |
+| `src/models/train.py` | Modifikasi LK-06 | Mendukung MLflow remote, validasi hash DVC, dan output training JSON |
+| `src/models/validation.py` | File baru LK-08 | Mendefinisikan aturan kelulusan model |
+| `src/models/evaluate.py` | File baru LK-08 | Mengevaluasi metrik MLflow secara otomatis |
+| `src/models/registry.py` | File baru LK-08 | Mengelola registrasi bersyarat ke Staging |
+| `tests/test_training_pipeline.py` | File baru LK-08 | Menguji chronological split dan pencegahan data leakage |
+| `tests/test_validation.py` | File baru LK-08 | Menguji validation gate |
+| `.github/workflows/mlops-automation.yaml` | File baru LK-08 | Mengorkestrasi pipeline otomatis |
+
+### Menjalankan Unit Test
+
+Dari direktori root proyek dengan dependensi yang telah terpasang:
+
+```bash
+python -m pytest tests/ -v
+```
+
+Pengujian lokal LK-08 menghasilkan 14 test dengan status PASSED.
+
+### Menjalankan Pipeline
+
+Workflow GitHub Actions akan berjalan otomatis setelah perubahan kode di-push pada branch yang dikonfigurasi.
+
+Eksekusi juga dapat dipicu secara manual melalui tab Actions dengan memilih workflow `LK08 MLOps Pipeline Automation`, kemudian `Run workflow`.
+
+Autentikasi DVC dan MLflow menggunakan repository secret `DAGSHUB_TOKEN`. Nilai token tidak disimpan dalam source code atau file YAML.
+
+### Hasil Implementasi GitHub Actions
+
+Eksekusi pertama dilakukan pada 8 November 2026 melalui push ke branch `feat/lk08-automation`, commit `c07603c`.
+
+| Job | Hasil |
+|---|---|
+| Automated Testing | SUCCESS |
+| Automated Training and Evaluation | SUCCESS |
+| Automated Model Registry | SUCCESS |
+| Unit Testing | 14 PASSED |
+
+Ketiga job berhasil dieksekusi secara berurutan tanpa intervensi manual setelah push.
+
+Bukti eksekusi:
+
+[GitHub Actions Run #1](https://github.com/mirchaee/MLOps-Prediksi-Saham/actions/runs/42470554256)
+
+### Hasil Evaluasi dan Validation Gate
+
+Model Random Forest menggunakan 100 estimator, max_depth 4, class_weight balanced, dan random_state 42.
+
+Hasil validasi otomatis:
+
+| Parameter | Nilai |
+|---|---|
+| Validation F1-score | 0.1250 |
+| Minimum F1-score | 0.5800 |
+| Evaluation Status | REJECTED |
+| Registry Status | SKIPPED |
+| New Model Version | Tidak dibuat |
+| New Model Stage | Tidak ditetapkan |
+
+Model tidak memenuhi ambang performa sehingga registrasi ke Staging dilewati secara otomatis.
+
+Status SUCCESS pada job Registry menunjukkan bahwa pemeriksaan kelayakan dieksekusi tanpa error, bukan bahwa model telah berhasil diregistrasikan.
+
+Model Production Version 1 yang digunakan pada LK-07 tetap dipertahankan pada registry lokal sebelumnya. Registry DagsHub merupakan lingkungan terpisah dan tidak secara otomatis mewarisi versi model lokal.
+
+### Analisis Keterbatasan
+
+Dataset dengan 230 observasi dan validation set berisi 33 observasi masih membatasi evaluasi model.
+
+Eksperimen tambahan menggunakan walk-forward cross-validation menunjukkan bahwa beberapa peningkatan F1-score tidak disertai peningkatan balanced accuracy yang meyakinkan dibandingkan baseline Always-Up.
+
+Oleh karena itu, threshold validasi tidak diturunkan dan model dengan performa di bawah persyaratan tidak dipaksakan masuk Staging.
+
+Perbaikan berikutnya dapat mencakup penambahan data historis, pengembangan fitur, dan evaluasi menggunakan periode data baru.
+
+### Peran Otomatisasi dalam Mencegah Silent Failure
+
+Otomatisasi MLOps mengurangi risiko perubahan kode yang tidak teruji, ketidaksesuaian versi dataset, serta promosi model yang tidak memenuhi standar performa.
+
+Integrasi pytest, DVC, MLflow, dan validation gate memastikan bahwa setiap kandidat model melalui pemeriksaan yang terukur sebelum dapat memasuki tahap berikutnya.
+
+Hasil LK-08 menunjukkan bahwa keberhasilan eksekusi pipeline tidak selalu berarti model layak digunakan. Sistem harus mampu membedakan keberhasilan operasional dan kualitas prediksi model.
+
+---
+
 ## Lisensi
 
 Hak Cipta © 2026 **Roniarta Sibarani**. Dilisensikan di bawah [MIT License](LICENSE).

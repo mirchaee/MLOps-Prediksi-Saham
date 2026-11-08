@@ -1,46 +1,91 @@
+
 name: Daily Stock Data Ingestion
 
-# Jadwal: Senin-Jumat pukul 17:00 WIB (WIB = UTC+7, jadi 10:00 UTC)
-# Bisa juga dipicu manual lewat tab "Actions" di GitHub (workflow_dispatch)
 on:
   schedule:
     - cron: "0 10 * * 1-5"
-  workflow_dispatch: {}
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-stock-ingestion
+  cancel-in-progress: false
 
 jobs:
   ingest:
+    name: Automated Data Ingestion
     runs-on: ubuntu-latest
 
+    env:
+      DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.DAGSHUB_TOKEN }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.DAGSHUB_TOKEN }}
+      AWS_DEFAULT_REGION: us-east-1
+
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
+          cache: pip
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Install Dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          python -m pip install "dvc[s3]"
 
-      - name: Run ingestion script
+      - name: Validate DagsHub Credentials
+        run: |
+          if [ -z "$DAGSHUB_TOKEN" ]; then
+            echo "DAGSHUB_TOKEN is not configured"
+            exit 1
+          fi
+
+      - name: Run Data Ingestion
         run: python src/data/ingest_data.py
 
-      - name: Run cleaning script
+      - name: Run Data Cleaning
         run: python src/data/clean_data.py
 
-      - name: Run feature engineering script
+      - name: Run Feature Engineering
         run: python src/features/build_features.py
 
-      - name: Track dataset with DVC
+      - name: Update DVC Metadata
         run: |
+          dvc add data/raw/BBCA_raw.csv
           dvc add data/final/BBCA_features.csv
-          echo "DVC pointer updated"
 
-      - name: Commit updated data & DVC pointer
+      - name: Push Dataset to DagsHub
+        run: |
+          dvc push data/raw/BBCA_raw.csv.dvc -r dagshub_s3
+          dvc push data/final/BBCA_features.csv.dvc -r dagshub_s3
+
+      - name: Verify DVC Remote
+        run: |
+          dvc status -c -r dagshub_s3 \
+            data/raw/BBCA_raw.csv.dvc \
+            data/final/BBCA_features.csv.dvc
+
+      - name: Commit and Push DVC Metadata
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/final/BBCA_features.csv.dvc .gitignore
-          git diff --quiet && git diff --staged --quiet || git commit -m "feat(data): update dataset via scheduled ingestion $(date +'%Y-%m-%d')"
-          git push
+
+          git add \
+            .gitignore \
+            data/raw/BBCA_raw.csv.dvc \
+            data/final/BBCA_features.csv.dvc
+
+          if ! git diff --cached --quiet; then
+            git commit -m "feat(data): update DVC dataset $(date -u +'%Y-%m-%d')"
+            git push origin HEAD:main
+          else
+            echo "No dataset metadata changes"
+          fi
