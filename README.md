@@ -1,143 +1,188 @@
 # MLOps: Sistem Prediksi Arah Pergerakan Harga Saham Harian
 
-[![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub Codespaces](https://img.shields.io/badge/Codespaces-Compatible-brightgreen.svg)](https://github.com/codespaces)
-[![Daily Ingestion](https://github.com/mirchaee/MLOps-Prediksi-Saham/actions/workflows/ingest_data.yml/badge.svg)](https://github.com/mirchaee/MLOps-Prediksi-Saham/actions/workflows/ingest_data.yml)
+[![Python
+3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub
+Codespaces](https://img.shields.io/badge/Codespaces-Compatible-brightgreen.svg)](https://github.com/codespaces)
+[![Daily
+Ingestion](https://github.com/mirchaee/MLOps-Prediksi-Saham/actions/workflows/ingest_data.yml/badge.svg)](https://github.com/mirchaee/MLOps-Prediksi-Saham/actions/workflows/ingest_data.yml)
 
-Proyek MLOps ini dikembangkan untuk memprediksi arah pergerakan harga saham harian (*Next-Day Price Direction*) pada emiten Bursa Efek Indonesia (BEI) berbasis *Continual Learning*.
+Proyek MLOps ini dikembangkan untuk memprediksi arah pergerakan harga
+saham harian (*Next-Day Price Direction*) pada emiten Bursa Efek
+Indonesia (BEI) berbasis *Continual Learning*.
 
-Sistem ini dirancang dengan infrastruktur MLOps modern untuk memantau performa model, menangani *data drift* dan *concept drift*, serta melakukan pembaruan model secara terautomasi agar hasil prediksi tetap relevan terhadap dinamika pasar finansial. Hasil prediksi bersifat eksperimental dan difokuskan sebagai alat bantu keputusan analitis.
+Sistem ini dirancang dengan infrastruktur MLOps modern untuk memantau
+performa model, menangani *data drift* dan *concept drift*, serta
+melakukan pembaruan model secara terautomasi agar hasil prediksi tetap
+relevan terhadap dinamika pasar finansial. Hasil prediksi bersifat
+eksperimental dan difokuskan sebagai alat bantu keputusan analitis.
 
----
+------------------------------------------------------------------------
 
 ## Metadata Proyek
-* **Mata Kuliah:** Machine Learning Operations (CIF60050) - Kelas A
-* **Dosen Pengampu:** Rizal Setya Perdana, S.Kom., M.Kom., Ph.D.
-* **Nama Mahasiswa:** Roniarta Sibarani
-* **NIM:** 245150200111036
-* **Program Studi:** S1 Teknik Informatika
-* **Fakultas / Universitas:** Fakultas Ilmu Komputer, Universitas Brawijaya
 
----
+- **Mata Kuliah:** Machine Learning Operations (CIF60050) - Kelas A
+- **Dosen Pengampu:** Rizal Setya Perdana, S.Kom., M.Kom., Ph.D.
+- **Nama Mahasiswa:** Roniarta Sibarani
+- **NIM:** 245150200111036
+- **Program Studi:** S1 Teknik Informatika
+- **Fakultas / Universitas:** Fakultas Ilmu Komputer, Universitas
+  Brawijaya
+
+------------------------------------------------------------------------
 
 ## Tujuan Proyek
 
 Proyek ini bertujuan untuk:
-1. **Automated Data Pipeline:** Penarikan data histori harga saham *End-of-Day* (EOD) secara berkala dan otomatis dari Yahoo Finance API, dijadwalkan lewat GitHub Actions CRON (Senin–Jumat, 17:00 WIB).
-2. **Feature Engineering:** Kalkulasi indikator teknikal (*Relative Strength Index*, *MACD*, *Bollinger Bands*) untuk mengekstraksi sinyal pergerakan tren pasar.
-3. **Continual Learning Pipeline:** Pembangunan mekanisme *retraining* otomatis berbasis jadwal (mingguan) maupun *trigger* performa ($F1\text{-Score} < 0.58$) dan deteksi pergeseran data.
-4. **Model Serving & Monitoring:** Menyediakan layanan prediksi melalui REST API serta pemantauan kesehatan model secara berkelanjutan.
-5. **Reproducible Environment:** Menyediakan lingkungan pengembangan yang konsisten berbasis *cloud* menggunakan **GitHub Codespaces**.
 
----
+1.  **Automated Data Pipeline:** Penarikan data histori harga saham
+    *End-of-Day* (EOD) secara berkala dan otomatis dari Yahoo Finance
+    API, dijadwalkan lewat GitHub Actions CRON (Senin–Jumat, 17:00 WIB).
+2.  **Feature Engineering:** Kalkulasi indikator teknikal (*Relative
+    Strength Index*, *MACD*, *Bollinger Bands*) untuk mengekstraksi
+    sinyal pergerakan tren pasar.
+3.  **Continual Learning Pipeline:** Pembangunan mekanisme *retraining*
+    otomatis berbasis jadwal (mingguan) maupun *trigger* performa
+    ($F1\text{-Score} < 0.58$) dan deteksi pergeseran data.
+4.  **Model Serving & Monitoring:** Menyediakan layanan prediksi melalui
+    REST API serta pemantauan kesehatan model secara berkelanjutan.
+5.  **Reproducible Environment:** Menyediakan lingkungan pengembangan
+    yang konsisten berbasis *cloud* menggunakan **GitHub Codespaces**.
+
+------------------------------------------------------------------------
 
 ## Struktur Direktori
 
-Repositori ini disusun mengikuti konvensi standar MLOps industri agar kode, data, artefak model, serta eksperimen tersimpan secara terpisah, terstruktur, dan mudah dipelihara:
+Repositori ini disusun mengikuti konvensi standar MLOps industri agar
+kode, data, artefak model, serta eksperimen tersimpan secara terpisah,
+terstruktur, dan mudah dipelihara:
 
-```text
+``` text
 MLOps-Prediksi-Saham/
-├── .devcontainer/          # Konfigurasi otomatisasi lingkungan GitHub Codespaces
-│   └── devcontainer.json
+├── .devcontainer/
+├── .dvc/
 ├── .github/
 │   └── workflows/
-│       └── ingest_data.yml # CRON job: ingestion -> cleaning -> feature engineering -> DVC
-├── config/                 # File konfigurasi parameter, model, dan jalur data
+│       ├── ingest_data.yml
+│       └── mlops-automation.yaml
+├── config/
 ├── data/
-│   ├── raw/                # Data mentah EOD dari Yahoo Finance (ignored oleh Git, di-track DVC)
-│   ├── processed/          # Data pasca-pembersihan dan validasi
-│   └── final/              # Dataset final dengan feature engineering (RSI, MACD, BB)
-├── docs/                   # Laporan Lembar Kerja (LK) dan dokumentasi arsitektur
-├── models/                 # Artefak model machine learning terlatih (.pkl / registry)
-├── notebooks/              # Jupyter Notebooks untuk Exploratory Data Analysis (EDA)
-├── scripts/                # Skrip operasional & validasi lingkungan (bukan bagian pipeline inti)
-│   ├── environment_test.py     # Validasi kesiapan lingkungan kerja
-│   └── initial_experiment.py   # Eksperimen & validasi awal pipeline
-├── src/                    # Kode sumber modular utama
-│   ├── api/                # Backend API (FastAPI) untuk serving prediksi
+│   ├── raw/
+│   ├── processed/
+│   └── final/
+├── docs/
+├── mlartifacts/
+├── models/
+├── notebooks/
+├── scripts/
+├── src/
+│   ├── api/
+│   │   └── main.py
 │   ├── data/
-│   │   ├── ingest_data.py  # Extract: tarik data OHLCV dari Yahoo Finance (yfinance, dengan retry)
-│   │   └── preprocess.py   # Transform: null-check, duplicate-check, sort chronological
 │   ├── features/
-│   │   └── build_features.py # Transform: RSI-14, MACD, Bollinger Bands, target biner
-│   ├── models/              # Skrip pelatihan, evaluasi, dan registry model
-│   └── monitoring/          # Skrip pemantauan Data Drift & penurunan performa
-├── tests/                  # Pengujian unit (unit testing) dan integrasi
-├── .gitignore              # Pengecualian pelacakan berkas Git (termasuk data mentah -> DVC)
-├── LICENSE                 # Lisensi open-source (MIT)
-├── README.md               # Dokumentasi utama proyek
-└── requirements.txt        # Daftar dependensi library Python
+│   ├── models/
+│   └── monitoring/
+├── tests/
+├── Dockerfile
+├── compose.yaml
+├── mlflow.db
+├── requirements.txt
+├── requirements-docker.txt
+└── README.md
 ```
 
----
+------------------------------------------------------------------------
 
 ## Teknologi yang Digunakan
 
-* **Bahasa Pemrograman:** Python 3.12
-* **Environment & Containerization:** GitHub Codespaces, DevContainer, Docker
-* **Data Ingestion & Analytics:** Pandas, NumPy, yfinance
-* **Data Versioning & Orkestrasi:** DVC, GitHub Actions (scheduled CRON)
-* **Machine Learning & MLOps:** Scikit-Learn, XGBoost, MLflow
-* **API & Serving:** FastAPI, Uvicorn
-* **Testing & Quality Assurance:** Pytest, Pylance, AutoDocstring
+- **Bahasa Pemrograman:** Python 3.12
+- **Environment & Containerization:** GitHub Codespaces, DevContainer,
+  Docker
+- **Data Ingestion & Analytics:** Pandas, NumPy, yfinance
+- **Data Versioning & Orkestrasi:** DVC, GitHub Actions (scheduled CRON)
+- **Machine Learning & MLOps:** Scikit-Learn, XGBoost, MLflow
+- **API & Serving:** FastAPI, Uvicorn
+- **Testing & Quality Assurance:** Pytest, Pylance, AutoDocstring
 
----
+------------------------------------------------------------------------
 
 ## Menjalankan Proyek dengan GitHub Codespaces
 
-Penggunaan **GitHub Codespaces** sangat direkomendasikan karena seluruh *environment* dan dependensi telah terkonfigurasi secara otomatis pada `.devcontainer/devcontainer.json`.
+Penggunaan **GitHub Codespaces** sangat direkomendasikan karena seluruh
+*environment* dan dependensi telah terkonfigurasi secara otomatis pada
+`.devcontainer/devcontainer.json`.
 
 ### 1. Membuat & Membuka Codespace
 
-1. Buka repositori ini di GitHub.
-2. Klik tombol **Code** di kanan atas → pilih tab **Codespaces**.
-3. Klik **Create codespace on main**.
-4. Tunggu hingga proses *build container* selesai. Environment akan otomatis mengaktifkan Python 3.12 dan menginstal seluruh dependensi pada `requirements.txt`.
+1.  Buka repositori ini di GitHub.
+2.  Klik tombol **Code** di kanan atas → pilih tab **Codespaces**.
+3.  Klik **Create codespace on main**.
+4.  Tunggu hingga proses *build container* selesai. Environment akan
+    otomatis mengaktifkan Python 3.12 dan menginstal seluruh dependensi
+    pada `requirements.txt`.
 
 ### 2. Verifikasi Environment
 
-Setelah Codespace selesai dimuat, buka terminal dan jalankan skrip pengujian lingkungan:
+Setelah Codespace selesai dimuat, buka terminal dan jalankan skrip
+pengujian lingkungan:
 
-```bash
+``` bash
 python scripts/environment_test.py
 ```
 
-*Jika seluruh library terinstal dengan benar tanpa error, terminal akan mengonfirmasi kesiapan sistem.*
+*Jika seluruh library terinstal dengan benar tanpa error, terminal akan
+mengonfirmasi kesiapan sistem.*
 
 ### 3. Menjalankan Eksperimen Awal
 
-Untuk menguji pipeline penarikan data saham awal (contoh emiten: `BBCA.JK`):
+Untuk menguji pipeline penarikan data saham awal (contoh emiten:
+`BBCA.JK`):
 
-```bash
+``` bash
 python scripts/initial_experiment.py
 ```
 
-Atau buka file `notebooks/1.0-initial-eda.ipynb` menggunakan Jupyter Notebook di Codespaces untuk melihat hasil *Exploratory Data Analysis* (EDA) secara interaktif.
+Atau buka file `notebooks/1.0-initial-eda.ipynb` menggunakan Jupyter
+Notebook di Codespaces untuk melihat hasil *Exploratory Data Analysis*
+(EDA) secara interaktif.
 
 ### 4. Menjalankan Pipeline Data (ETL) Secara Manual
 
-Pipeline data dijalankan otomatis setiap hari kerja pukul 17:00 WIB lewat GitHub Actions, tetapi bisa juga dijalankan manual untuk pengembangan/debugging:
+Pipeline data dijalankan otomatis setiap hari kerja pukul 17:00 WIB
+lewat GitHub Actions, tetapi bisa juga dijalankan manual untuk
+pengembangan/debugging:
 
-```bash
+``` bash
 python src/data/ingest_data.py       # Extract: tarik data OHLCV terbaru dari Yahoo Finance (dengan retry saat error koneksi)
 python src/data/preprocess.py        # Transform: bersihkan data mentah (null, duplikat, urutan tanggal)
 python src/features/build_features.py # Transform: hitung RSI/MACD/Bollinger Bands + label target
 ```
 
 **Detail skrip ingestion (`ingest_data.py`):**
-- Mengambil sliding window 250 hari perdagangan terakhir dari Yahoo Finance API untuk ticker `BBCA.JK`.
-- Dilengkapi mekanisme *retry* (maksimal 3 percobaan, jeda 5 detik) untuk menangani error koneksi/timeout.
-- Bersifat non-destruktif: setiap eksekusi menghasilkan snapshot baru bertimestamp (`data/raw/BBCA_raw_YYYYMMDD.csv`) tanpa menimpa data lama, serta memperbarui file `data/raw/BBCA_raw.csv` sebagai referensi data terbaru.
+
+- Mengambil sliding window 250 hari perdagangan terakhir dari Yahoo
+  Finance API untuk ticker `BBCA.JK`.
+- Dilengkapi mekanisme *retry* (maksimal 3 percobaan, jeda 5 detik)
+  untuk menangani error koneksi/timeout.
+- Bersifat non-destruktif: setiap eksekusi menghasilkan snapshot baru
+  bertimestamp (`data/raw/BBCA_raw_YYYYMMDD.csv`) tanpa menimpa data
+  lama, serta memperbarui file `data/raw/BBCA_raw.csv` sebagai referensi
+  data terbaru.
 
 **Detail skrip preprocessing (`preprocess.py`):**
+
 - Membaca data mentah terbaru dari `data/raw/BBCA_raw.csv`.
-- Melakukan null-check pada kolom OHLCV, pengecekan baris duplikat berdasarkan tanggal, dan pengurutan data secara kronologis.
-- Menyimpan hasil ke `data/processed/BBCA_processed.csv`, siap digunakan pada tahap ekstraksi fitur (`build_features.py`).
+- Melakukan null-check pada kolom OHLCV, pengecekan baris duplikat
+  berdasarkan tanggal, dan pengurutan data secara kronologis.
+- Menyimpan hasil ke `data/processed/BBCA_processed.csv`, siap digunakan
+  pada tahap ekstraksi fitur (`build_features.py`).
 
-Setelah dataset final terbentuk di `data/final/BBCA_features.csv`, catat versinya dengan DVC:
+Setelah dataset final terbentuk di `data/final/BBCA_features.csv`, catat
+versinya dengan DVC:
 
-```bash
+``` bash
 dvc add data/final/BBCA_features.csv
 git add data/final/BBCA_features.csv.dvc
 git commit -m "feat(data): update dataset versi $(date +'%Y-%m-%d')"
@@ -146,30 +191,43 @@ git push
 
 ### 5. Memantau Otomasi Pipeline
 
-Status ingestion harian dapat dipantau pada tab **Actions** repositori ini, workflow `Daily Stock Data Ingestion`. Workflow dapat dipicu manual kapan saja lewat tombol **Run workflow** tanpa menunggu jadwal CRON.
+Status ingestion harian dapat dipantau pada tab **Actions** repositori
+ini, workflow `Daily Stock Data Ingestion`. Workflow dapat dipicu manual
+kapan saja lewat tombol **Run workflow** tanpa menunggu jadwal CRON.
 
----
+------------------------------------------------------------------------
+
 ## Manajemen Data Versioning Menggunakan DVC
 
 ### 1. Tujuan Implementasi
 
-Data Version Control (DVC) digunakan untuk mengelola perubahan dataset saham BBCA.JK tanpa menyimpan seluruh versi file CSV secara langsung di Git. DVC menyimpan konten dataset melalui cache dan mencatat metadata hash pada file `.dvc`, sedangkan Git digunakan untuk menyimpan histori perubahan metadata tersebut.
+Data Version Control (DVC) digunakan untuk mengelola perubahan dataset
+saham BBCA.JK tanpa menyimpan seluruh versi file CSV secara langsung di
+Git. DVC menyimpan konten dataset melalui cache dan mencatat metadata
+hash pada file `.dvc`, sedangkan Git digunakan untuk menyimpan histori
+perubahan metadata tersebut.
 
-Mekanisme ini mendukung *data lineage*, audit perubahan dataset, dan *reproducibility* dalam pengembangan pipeline continual learning.
+Mekanisme ini mendukung *data lineage*, audit perubahan dataset, dan
+*reproducibility* dalam pengembangan pipeline continual learning.
 
 ### 2. Alur Pembaruan Dataset
 
 Proses pembaruan dataset dilakukan melalui tahapan:
 
-1. **Data Ingestion:** Mengambil data saham BBCA.JK terbaru dari Yahoo Finance melalui `src/data/ingest_data.py`.
-2. **Preprocessing:** Melakukan null-check, duplicate-check, dan chronological sorting menggunakan `src/data/preprocess.py`.
-3. **Feature Engineering:** Menghitung RSI-14, MACD, Bollinger Bands, serta target klasifikasi melalui `src/features/build_features.py`.
-4. **Data Versioning:** Mencatat perubahan dataset raw dan final menggunakan DVC.
-5. **Git Version Control:** Menyimpan metadata `.dvc` ke Git untuk menghubungkan versi dataset dengan histori pengembangan.
+1.  **Data Ingestion:** Mengambil data saham BBCA.JK terbaru dari Yahoo
+    Finance melalui `src/data/ingest_data.py`.
+2.  **Preprocessing:** Melakukan null-check, duplicate-check, dan
+    chronological sorting menggunakan `src/data/preprocess.py`.
+3.  **Feature Engineering:** Menghitung RSI-14, MACD, Bollinger Bands,
+    serta target klasifikasi melalui `src/features/build_features.py`.
+4.  **Data Versioning:** Mencatat perubahan dataset raw dan final
+    menggunakan DVC.
+5.  **Git Version Control:** Menyimpan metadata `.dvc` ke Git untuk
+    menghubungkan versi dataset dengan histori pengembangan.
 
 Untuk menjalankan pembaruan dataset secara lokal melalui PowerShell:
 
-```powershell
+``` powershell
 .\.venv\Scripts\python.exe src/data/ingest_data.py
 .\.venv\Scripts\python.exe src/data/preprocess.py
 .\.venv\Scripts\python.exe src/features/build_features.py
@@ -181,35 +239,38 @@ git add data/raw/BBCA_raw.csv.dvc data/final/BBCA_features.csv.dvc
 git commit -m "feat(dvc): update BBCA dataset"
 ```
 
-Setiap pembaruan hanya dicatat sebagai versi baru setelah perubahan dataset diverifikasi.
+Setiap pembaruan hanya dicatat sebagai versi baru setelah perubahan
+dataset diverifikasi.
 
 ### 3. Hasil Implementasi Versioning
 
 Implementasi LK-05 berhasil menghasilkan dua versi dataset:
 
-| Parameter | Versi 1 (V1) | Versi 2 (V2) |
-|---|---|---|
-| Tanggal terakhir | 25 September 2026 | 9 Oktober 2026 |
-| Jumlah raw data | 250 baris | 250 baris |
-| Jumlah final data | 230 baris | 230 baris |
-| Hash raw (MD5) | `cc774d62...` | `be4e1b69...` |
-| Hash final (MD5) | `44b016fe...` | `b2b54b88...` |
-| Git Commit | `fb3a664` | `2e2ed64` |
-| Git Tag | `lk05-data-v1-complete` | `lk05-data-v2` |
+| Parameter         | Versi 1 (V1)            | Versi 2 (V2)   |
+|-------------------|-------------------------|----------------|
+| Tanggal terakhir  | 25 September 2026       | 9 Oktober 2026 |
+| Jumlah raw data   | 250 baris               | 250 baris      |
+| Jumlah final data | 230 baris               | 230 baris      |
+| Hash raw (MD5)    | `cc774d62...`           | `be4e1b69...`  |
+| Hash final (MD5)  | `44b016fe...`           | `b2b54b88...`  |
+| Git Commit        | `fb3a664`               | `2e2ed64`      |
+| Git Tag           | `lk05-data-v1-complete` | `lk05-data-v2` |
 
-Pembaruan dataset menghasilkan 10 tanggal perdagangan baru dan mengeluarkan 10 tanggal terlama. Jumlah observasi tetap 250 karena pipeline menerapkan mekanisme sliding window.
+Pembaruan dataset menghasilkan 10 tanggal perdagangan baru dan
+mengeluarkan 10 tanggal terlama. Jumlah observasi tetap 250 karena
+pipeline menerapkan mekanisme sliding window.
 
 ### 4. Audit Perubahan Dataset
 
 Perbandingan kedua versi dilakukan menggunakan:
 
-```powershell
+``` powershell
 .\.venv\Scripts\dvc.exe diff --show-hash lk05-data-v1-complete lk05-data-v2
 ```
 
 Hasil audit:
 
-```text
+``` text
 Modified:
     44b016fe..b2b54b88  data\final\BBCA_features.csv
     cc774d62..be4e1b69  data\raw\BBCA_raw.csv
@@ -217,57 +278,85 @@ Modified:
 files summary: 2 modified
 ```
 
-Hasil tersebut menunjukkan bahwa DVC berhasil mengidentifikasi perubahan pada dataset raw dan final, serta mencatat perbedaan hash antara kedua versi.
+Hasil tersebut menunjukkan bahwa DVC berhasil mengidentifikasi perubahan
+pada dataset raw dan final, serta mencatat perbedaan hash antara kedua
+versi.
 
 ### 5. Reproducibility
 
-Penerapan DVC memungkinkan setiap versi dataset diidentifikasi melalui kombinasi Git commit, metadata `.dvc`, dan konten dataset yang tersimpan di cache atau remote storage.
+Penerapan DVC memungkinkan setiap versi dataset diidentifikasi melalui
+kombinasi Git commit, metadata `.dvc`, dan konten dataset yang tersimpan
+di cache atau remote storage.
 
-Versi V1 dan V2 dapat ditelusuri melalui Git tag untuk mendukung proses audit dan pengujian ulang model pada tahap pengembangan berikutnya.
+Versi V1 dan V2 dapat ditelusuri melalui Git tag untuk mendukung proses
+audit dan pengujian ulang model pada tahap pengembangan berikutnya.
 
-Git menyimpan metadata, bukan seluruh konten dataset. Oleh karena itu, pemulihan dataset membutuhkan DVC cache atau remote storage yang masih menyimpan versi terkait.
+Git menyimpan metadata, bukan seluruh konten dataset. Oleh karena itu,
+pemulihan dataset membutuhkan DVC cache atau remote storage yang masih
+menyimpan versi terkait.
 
-Konfigurasi DVC remote merupakan mekanisme tambahan untuk melakukan backup dan sinkronisasi dataset. Penggunaan remote berbasis direktori lokal dapat mendukung pengujian mekanisme push dan pull, sedangkan penyimpanan cloud diperlukan untuk akses lintas perangkat tanpa bergantung pada laptop pengembangan.
+Konfigurasi DVC remote merupakan mekanisme tambahan untuk melakukan
+backup dan sinkronisasi dataset. Penggunaan remote berbasis direktori
+lokal dapat mendukung pengujian mekanisme push dan pull, sedangkan
+penyimpanan cloud diperlukan untuk akses lintas perangkat tanpa
+bergantung pada laptop pengembangan.
 
 ### Pengujian DVC Remote Storage
 
-Pada LK-05, DVC dikonfigurasi menggunakan *local filesystem remote* yang disimpan di luar direktori repositori Git.
+Pada LK-05, DVC dikonfigurasi menggunakan *local filesystem remote* yang
+disimpan di luar direktori repositori Git.
 
 Pengujian dilakukan melalui perintah berikut:
 
-```powershell
+``` powershell
 .\.venv\Scripts\dvc.exe push --all-tags
 .\.venv\Scripts\dvc.exe status --cloud --all-tags
 .\.venv\Scripts\dvc.exe pull
 ```
 
-Hasil pengujian menunjukkan bahwa empat objek data berhasil dikirim ke remote, status cache dan remote telah tersinkronisasi, serta perintah `dvc pull` berhasil dijalankan.
+Hasil pengujian menunjukkan bahwa empat objek data berhasil dikirim ke
+remote, status cache dan remote telah tersinkronisasi, serta perintah
+`dvc pull` berhasil dijalankan.
 
-Konfigurasi remote disimpan secara lokal melalui `.dvc/config.local` sehingga tidak dibagikan melalui Git. Implementasi ini memvalidasi mekanisme sinkronisasi dataset, sedangkan penggunaan cloud storage dan pengujian pemulihan lintas perangkat merupakan pengembangan lanjutan.
+Konfigurasi remote disimpan secara lokal melalui `.dvc/config.local`
+sehingga tidak dibagikan melalui Git. Implementasi ini memvalidasi
+mekanisme sinkronisasi dataset, sedangkan penggunaan cloud storage dan
+pengujian pemulihan lintas perangkat merupakan pengembangan lanjutan.
 
 ## Alur Pengembangan (GitHub Flow)
 
 Pengembangan repositori ini menerapkan aturan standar **GitHub Flow**:
 
-1. **Branching:** Membuat *branch* fitur/eksperimen baru dari `main` (contoh: `git switch -c feat/initial-eda`).
-2. **Development & Commit:** Melakukan perubahan kode dan menyimpan *commit* dengan pesan yang informatif.
-3. **Pull Request (PR):** Mengunggah *branch* ke GitHub dan membuat PR ke branch `main`.
-4. **Merge:** Melakukan *merge* ke branch `main` setelah seluruh pengujian terverifikasi.
+1.  **Branching:** Membuat *branch* fitur/eksperimen baru dari `main`
+    (contoh: `git switch -c feat/initial-eda`).
+2.  **Development & Commit:** Melakukan perubahan kode dan menyimpan
+    *commit* dengan pesan yang informatif.
+3.  **Pull Request (PR):** Mengunggah *branch* ke GitHub dan membuat PR
+    ke branch `main`.
+4.  **Merge:** Melakukan *merge* ke branch `main` setelah seluruh
+    pengujian terverifikasi.
 
 ## Model Aktif untuk Inferensi
 
-Berdasarkan hasil evaluasi dan proses registrasi menggunakan MLflow Model Registry, model yang saat ini digunakan untuk inferensi adalah **Random Forest Version 1** dari registered model `bbca-direction-classifier`.
+Berdasarkan hasil evaluasi dan proses registrasi menggunakan MLflow
+Model Registry, model yang saat ini digunakan untuk inferensi adalah
+**Random Forest Version 1** dari registered model
+`bbca-direction-classifier`.
 
-Model Version 1 dipilih karena menghasilkan performa evaluasi validation yang lebih baik dibandingkan Version 2.
+Model Version 1 dipilih karena menghasilkan performa evaluasi validation
+yang lebih baik dibandingkan Version 2.
 
-| Metrik | Version 1 | Version 2 |
-|---|---:|---:|
-| Accuracy | 0.6364 | 0.6061 |
-| Precision | 1.0000 | 1.0000 |
-| Recall | 0.2000 | 0.1333 |
-| F1-score | 0.3333 | 0.2353 |
+| Metrik    | Version 1 | Version 2 |
+|-----------|----------:|----------:|
+| Accuracy  |    0.6364 |    0.6061 |
+| Precision |    1.0000 |    1.0000 |
+| Recall    |    0.2000 |    0.1333 |
+| F1-score  |    0.3333 |    0.2353 |
 
-Version 1 memiliki nilai accuracy, recall, dan F1-score yang lebih tinggi, sementara precision kedua versi sama. Oleh karena itu, Version 1 ditetapkan sebagai model Production dan menjadi versi aktif yang digunakan untuk proses inferensi.
+Version 1 memiliki nilai accuracy, recall, dan F1-score yang lebih
+tinggi, sementara precision kedua versi sama. Oleh karena itu, Version 1
+ditetapkan sebagai model Production dan menjadi versi aktif yang
+digunakan untuk proses inferensi.
 
 Informasi model aktif:
 
@@ -278,137 +367,97 @@ Informasi model aktif:
 - **Model URI:** `models:/bbca-direction-classifier/1`
 - **Dataset:** `lk05-data-v2`
 
-Model dapat dimuat kembali melalui MLflow menggunakan Model URI tersebut. Pengujian inferensi telah berhasil dilakukan menggunakan lima sampel input dengan sepuluh fitur.
+Model dapat dimuat kembali melalui MLflow menggunakan Model URI
+tersebut. Pengujian inferensi telah berhasil dilakukan menggunakan lima
+sampel input dengan sepuluh fitur.
 
----
+------------------------------------------------------------------------
 
----
+------------------------------------------------------------------------
 
-## LK-08: Otomatisasi End-to-End MLOps Pipeline
+## LK-08
 
-### Tujuan Implementasi
+### Alur Otomatisasi
 
-LK-08 mengimplementasikan prinsip Code as a Trigger melalui GitHub Actions. Perubahan kode yang dikirim ke repositori secara otomatis memicu pengujian, pelatihan ulang model, evaluasi performa, dan pemeriksaan kelayakan registrasi model.
+Workflow `.github/workflows/mlops-automation.yaml` memiliki tiga job:
 
-Implementasi ini melanjutkan pengelolaan dataset DVC pada LK-05, pelatihan dan pelacakan eksperimen MLflow pada LK-06, serta Model Registry pada LK-07.
+1.  **Automated Testing:** menjalankan unit test menggunakan pytest.
+2.  **Training and Evaluation:** mengambil dataset dari DVC remote,
+    melatih Random Forest, mencatat eksperimen ke MLflow, dan menghitung
+    F1-score.
+3.  **Model Registry:** mendaftarkan kandidat ke Staging hanya jika
+    F1-score memenuhi threshold `0.58`.
 
-### Infrastruktur dan Konfigurasi
+Workflow berjalan pada push ke branch yang dikonfigurasi dan pull
+request menuju `main`. Pada pull request, hanya job Testing yang
+dijalankan. Kredensial DVC dan MLflow disimpan sebagai GitHub Secret
+`DAGSHUB_TOKEN`.
 
-| Komponen | Implementasi |
-|---|---|
-| Lingkungan pengembangan | VS Code lokal dengan Docker Dev Container |
-| Python | 3.12 |
-| CI/CD | GitHub Actions |
-| Automated Testing | pytest |
-| Data Versioning | DVC |
-| DVC Remote | DagsHub S3-compatible storage |
-| Machine Learning | RandomForestClassifier |
-| Experiment Tracking | MLflow melalui DagsHub |
-| Model Registry | MLflow Model Registry |
-| Validation Gate | F1-score >= 0.58 |
+### Hasil Pengujian
 
-Dataset baseline yang digunakan berasal dari LK-05 V2, dengan 230 observasi, 10 fitur numerik, dan hash MD5 `b2b54b8853b623e24328369d34d31128`.
+Eksekusi pertama pada 8 November 2026 menghasilkan:
 
-### Arsitektur Pipeline Otomatis
+| Komponen                | Hasil     |
+|-------------------------|-----------|
+| Automated Testing       | SUCCESS   |
+| Training and Evaluation | SUCCESS   |
+| Model Registry          | SUCCESS   |
+| Unit test               | 14 PASSED |
+| Validation F1-score     | 0.1250    |
+| Minimum F1-score        | 0.5800    |
+| Keputusan model         | REJECTED  |
+| Registrasi model baru   | SKIPPED   |
 
-Pipeline didefinisikan dalam `.github/workflows/mlops-automation.yaml` dan terdiri atas tiga job utama:
+Seluruh job berhasil dijalankan, tetapi kandidat model ditolak karena
+F1-score tidak mencapai threshold. Status SUCCESS pada job Registry
+berarti proses validasi berjalan tanpa error, bukan berarti model
+berhasil didaftarkan.
 
-1. **Automated Testing:** Menjalankan pytest untuk memeriksa integritas kode dan aturan validasi.
-2. **Automated Training and Evaluation:** Mengunduh dataset dari DVC remote, melatih Random Forest, mencatat eksperimen ke MLflow, dan mengevaluasi F1-score.
-3. **Automated Model Registry:** Memeriksa kelayakan model dan mendaftarkannya ke Staging hanya jika memenuhi threshold.
+Model Production Version 1 pada registry lokal LK-07 tetap
+dipertahankan. Registry DagsHub merupakan lingkungan terpisah dan tidak
+otomatis mewarisi model dari registry lokal.
 
-Workflow dipicu melalui push pada branch `main` dan `feat/lk08-automation`, serta melalui pull request menuju `main`. Pada pull request, hanya job Testing yang dijalankan untuk menghindari penggunaan kredensial pada perubahan yang belum digabungkan.
+### Catatan Evaluasi
 
-### Integrasi dan Perubahan File
+Dataset baseline berisi 230 observasi dengan validation set 33
+observasi. Ukuran data tersebut masih membatasi evaluasi performa.
+Threshold `0.58` tetap dipertahankan agar model yang belum memenuhi
+kriteria tidak dipaksakan masuk Staging.
 
-| File | Jenis perubahan | Fungsi |
-|---|---|---|
-| `.dvc/config` | Modifikasi LK-05 | Menambahkan remote penyimpanan DagsHub |
-| `data/final/BBCA_features.csv.dvc` | Modifikasi metadata LK-05 | Menyelaraskan pointer DVC dengan baseline dataset |
-| `src/models/train.py` | Modifikasi LK-06 | Mendukung MLflow remote, validasi hash DVC, dan output training JSON |
-| `src/models/validation.py` | File baru LK-08 | Mendefinisikan aturan kelulusan model |
-| `src/models/evaluate.py` | File baru LK-08 | Mengevaluasi metrik MLflow secara otomatis |
-| `src/models/registry.py` | File baru LK-08 | Mengelola registrasi bersyarat ke Staging |
-| `tests/test_training_pipeline.py` | File baru LK-08 | Menguji chronological split dan pencegahan data leakage |
-| `tests/test_validation.py` | File baru LK-08 | Menguji validation gate |
-| `.github/workflows/mlops-automation.yaml` | File baru LK-08 | Mengorkestrasi pipeline otomatis |
+Hasil LK-08 menunjukkan bahwa keberhasilan pipeline secara teknis harus
+dibedakan dari kelayakan model berdasarkan metrik evaluasi.
 
-### Menjalankan Unit Test
+------------------------------------------------------------------------
 
-Dari direktori root proyek dengan dependensi yang telah terpasang:
+## Menjalankan Seluruh Sistem dengan Docker Compose
 
-```bash
-python -m pytest tests/ -v
+Pastikan Docker Desktop aktif dan terminal berada di direktori utama
+proyek. Jalankan satu perintah berikut untuk membangun image serta
+menjalankan MLflow Server dan FastAPI:
+
+``` powershell
+docker compose up -d --build
 ```
 
-Pengujian lokal LK-08 menghasilkan 14 test dengan status PASSED.
+Periksa status layanan:
 
-### Menjalankan Pipeline
+``` powershell
+docker compose ps
+```
 
-Workflow GitHub Actions akan berjalan otomatis setelah perubahan kode di-push pada branch yang dikonfigurasi.
+Setelah kedua layanan berstatus `healthy`, akses:
 
-Eksekusi juga dapat dipicu secara manual melalui tab Actions dengan memilih workflow `LK08 MLOps Pipeline Automation`, kemudian `Run workflow`.
+- MLflow: `http://localhost:5055`
+- Dokumentasi API: `http://localhost:8000/docs`
 
-Autentikasi DVC dan MLflow menggunakan repository secret `DAGSHUB_TOKEN`. Nilai token tidak disimpan dalam source code atau file YAML.
+Untuk menghentikan layanan:
 
-### Hasil Implementasi GitHub Actions
-
-Eksekusi pertama dilakukan pada 8 November 2026 melalui push ke branch `feat/lk08-automation`, commit `c07603c`.
-
-| Job | Hasil |
-|---|---|
-| Automated Testing | SUCCESS |
-| Automated Training and Evaluation | SUCCESS |
-| Automated Model Registry | SUCCESS |
-| Unit Testing | 14 PASSED |
-
-Ketiga job berhasil dieksekusi secara berurutan tanpa intervensi manual setelah push.
-
-Bukti eksekusi:
-
-[GitHub Actions Run #1](https://github.com/mirchaee/MLOps-Prediksi-Saham/actions/runs/42470554256)
-
-### Hasil Evaluasi dan Validation Gate
-
-Model Random Forest menggunakan 100 estimator, max_depth 4, class_weight balanced, dan random_state 42.
-
-Hasil validasi otomatis:
-
-| Parameter | Nilai |
-|---|---|
-| Validation F1-score | 0.1250 |
-| Minimum F1-score | 0.5800 |
-| Evaluation Status | REJECTED |
-| Registry Status | SKIPPED |
-| New Model Version | Tidak dibuat |
-| New Model Stage | Tidak ditetapkan |
-
-Model tidak memenuhi ambang performa sehingga registrasi ke Staging dilewati secara otomatis.
-
-Status SUCCESS pada job Registry menunjukkan bahwa pemeriksaan kelayakan dieksekusi tanpa error, bukan bahwa model telah berhasil diregistrasikan.
-
-Model Production Version 1 yang digunakan pada LK-07 tetap dipertahankan pada registry lokal sebelumnya. Registry DagsHub merupakan lingkungan terpisah dan tidak secara otomatis mewarisi versi model lokal.
-
-### Analisis Keterbatasan
-
-Dataset dengan 230 observasi dan validation set berisi 33 observasi masih membatasi evaluasi model.
-
-Eksperimen tambahan menggunakan walk-forward cross-validation menunjukkan bahwa beberapa peningkatan F1-score tidak disertai peningkatan balanced accuracy yang meyakinkan dibandingkan baseline Always-Up.
-
-Oleh karena itu, threshold validasi tidak diturunkan dan model dengan performa di bawah persyaratan tidak dipaksakan masuk Staging.
-
-Perbaikan berikutnya dapat mencakup penambahan data historis, pengembangan fitur, dan evaluasi menggunakan periode data baru.
-
-### Peran Otomatisasi dalam Mencegah Silent Failure
-
-Otomatisasi MLOps mengurangi risiko perubahan kode yang tidak teruji, ketidaksesuaian versi dataset, serta promosi model yang tidak memenuhi standar performa.
-
-Integrasi pytest, DVC, MLflow, dan validation gate memastikan bahwa setiap kandidat model melalui pemeriksaan yang terukur sebelum dapat memasuki tahap berikutnya.
-
-Hasil LK-08 menunjukkan bahwa keberhasilan eksekusi pipeline tidak selalu berarti model layak digunakan. Sistem harus mampu membedakan keberhasilan operasional dan kualitas prediksi model.
-
----
+``` powershell
+docker compose down
+```
+------------------------------------------------------------------------
 
 ## Lisensi
 
-Hak Cipta © 2026 **Roniarta Sibarani**. Dilisensikan di bawah [MIT License](LICENSE).
+Hak Cipta © 2026 **Roniarta Sibarani**. Dilisensikan di bawah [MIT
+License](LICENSE).
