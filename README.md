@@ -455,12 +455,7 @@ Untuk menghentikan layanan:
 ``` powershell
 docker compose down
 ```
-------------------------------------------------------------------------
 
-## Lisensi
-
-Hak Cipta © 2026 **Roniarta Sibarani**. Dilisensikan di bawah [MIT
-License](LICENSE).
 
 ------------------------------------------------------------------------
 
@@ -543,3 +538,10 @@ docker compose ps model-api
 Opsi `--scale` mengganti jumlah replika untuk perintah yang dijalankan.
 Konfigurasi default tetap tiga. Setiap replika memerlukan satu port host
 yang tersedia di rentang Compose.
+
+------------------------------------------------------------------------
+
+## Lisensi
+
+Hak Cipta © 2026 **Roniarta Sibarani**. Dilisensikan di bawah [MIT
+License](LICENSE).
