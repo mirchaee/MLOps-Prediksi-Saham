@@ -461,3 +461,85 @@ docker compose down
 
 Hak Cipta © 2026 **Roniarta Sibarani**. Dilisensikan di bawah [MIT
 License](LICENSE).
+
+------------------------------------------------------------------------
+
+## LK-10 — Serving Model dan Simulasi Scaling
+
+Pengujian dilakukan di Windows melalui VS Code PowerShell dan Docker Desktop.
+Model Production yang digunakan adalah `bbca-direction-classifier` versi `1`.
+MLflow menyimpan model dalam image `mlops-bbca:lk10`.
+Service `model-api` menjalankan tiga replika secara default melalui
+`deploy.replicas`, dengan satu worker per replika.
+
+### Membangun image model
+
+Jalankan dari direktori utama proyek dengan Docker Desktop aktif dan CLI MLflow
+tersedia di lingkungan Python lokal. Registry LK-09 harus dapat mengakses
+`mlflow.db` dan `mlartifacts/` milik proyek.
+
+Jika hanya perlu menjalankan layanan LK-09, gunakan
+`docker compose up -d --build mlflow-server api-service`.
+Jalankan `model-api` setelah image LK-10 tersedia.
+
+```powershell
+docker compose up -d --wait mlflow-server
+$env:MLFLOW_TRACKING_URI = 'http://127.0.0.1:5055'
+mlflow models build-docker -m 'models:/bbca-direction-classifier/1' -n 'mlops-bbca:lk10' --env-manager local
+```
+
+Pada pengujian LK-10, build pertama mengalami timeout saat mengunduh PyArrow.
+Build yang berhasil menggunakan image LK-09 yang sudah memiliki dependensi
+dan memasang timeout pip yang lebih panjang. Parameter `base_image` diberikan
+melalui API Python MLflow karena CLI lokal tidak menyediakan `--base-image`.
+
+```powershell
+# Pastikan image mlops-bbca:lk09 sudah ada. Bila belum, jalankan
+# docker compose build mlflow-server
+@'
+FROM mlops-bbca:lk09
+ENV PIP_DEFAULT_TIMEOUT=120 PIP_RETRIES=8 DISABLE_NGINX=true
+'@ | docker build -t mlops-bbca:lk10-base -
+
+$env:MLFLOW_TRACKING_URI = 'http://127.0.0.1:5055'
+python -c "from mlflow.models import build_docker; build_docker(model_uri='models:/bbca-direction-classifier/1', name='mlops-bbca:lk10', env_manager='local', base_image='mlops-bbca:lk10-base')"
+```
+
+### Menjalankan service dan mengakses endpoint
+
+```powershell
+docker compose config --quiet
+docker compose up -d --wait model-api
+docker compose ps model-api
+```
+
+Setiap replika mendengarkan di port container `8080`. Compose memilih port
+Windows yang tersedia dari rentang `18081–18099` dan mengikatnya ke
+`127.0.0.1`. Gunakan `docker compose port --index` untuk melihat alamat
+replika saat ini. Endpoint `GET /ping` memeriksa kesiapan API, dan
+`POST /invocations` menerima JSON untuk inferensi.
+
+```powershell
+$address = docker compose port --index 1 model-api 8080
+$sample = '.\mlartifacts\1\models\m-73bb59608aa74fd9973bb39a64c4f070\artifacts\serving_input_example.json'
+curl.exe -sS -w '\nHTTP %{http_code}\n' -H 'Content-Type: application/json' --data-binary "@$sample" "http://$address/invocations"
+```
+
+Untuk contoh lima baris tersebut, ketiga replika yang diuji mengembalikan
+HTTP 200 dan `{"predictions": [1, 0, 1, 0, 1]}`.
+Label `1` berarti Up dan label `0` berarti Non-Up.
+
+### Mengubah jumlah replika
+
+```powershell
+docker compose up -d --wait --scale model-api=4 model-api
+docker compose ps model-api
+docker compose port --index 4 model-api 8080
+
+docker compose up -d --wait --scale model-api=3 model-api
+docker compose ps model-api
+```
+
+Opsi `--scale` mengganti jumlah replika untuk perintah yang dijalankan.
+Konfigurasi default tetap tiga. Setiap replika memerlukan satu port host
+yang tersedia di rentang Compose.
